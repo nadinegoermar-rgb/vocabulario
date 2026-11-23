@@ -1,0 +1,16 @@
+VOCABULÁRIO – so kommt die App auf dein iPhone
+
+1. Entpacke diese ZIP-Datei auf dem Computer. Du erhältst einen Ordner mit index.html, sw.js, manifest.webmanifest und drei Symbolen.
+
+2. Lade den ganzen Inhalt bei einem kostenlosen Hosting-Dienst hoch, zum Beispiel:
+   - Netlify Drop (app.netlify.com/drop): Ordner einfach ins Browserfenster ziehen
+   - GitHub Pages: neues Repository anlegen, Dateien hochladen, unter Settings > Pages aktivieren
+   Du bekommst eine Adresse mit https://, ohne https funktioniert die Offline-Funktion nicht.
+
+3. Alte Wörter mitnehmen (optional, vorher): In der bisherigen App unter Wortschatz > "Sichern & übertragen" einen Code erstellen und kopieren.
+
+4. Öffne die neue Adresse auf dem iPhone in Safari. Tippe auf Teilen > "Zum Home-Bildschirm" > Hinzufügen.
+
+5. Starte die App über das neue Symbol. Unter Wortschatz > "Sichern & übertragen" den Code einfügen und auf "Importieren" tippen.
+
+Hinweis: Die Wörter werden pro Adresse im Browser gespeichert. Öffne die App immer über das Home-Bildschirm-Symbol.

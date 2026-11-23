@@ -64,6 +64,12 @@ textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px
 textarea:focus-visible{outline:3px solid var(--ochre);outline-offset:2px}
 .row2{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .row2 button{padding:10px 4px;border:2px solid var(--blue);background:none;color:var(--blue);border-radius:10px;font:inherit;font-weight:600}
+li{flex-wrap:wrap}
+.acts{display:flex;gap:18px;width:100%}
+.acts button,.acts a{background:none;border:0;padding:6px 0;font:inherit;font-size:.9rem;color:var(--blue);text-decoration:none;cursor:pointer}
+.acts .del{color:var(--bad)}
+.edit{margin:0;width:100%}
+.lk{color:var(--blue);font-size:.9rem;text-decoration:none}
 .hidden{display:none}
 </style>
 </head>
@@ -90,7 +96,8 @@ textarea:focus-visible{outline:3px solid var(--ochre);outline-offset:2px}
 
 <section id="words" class="hidden">
 <form id="add">
-<input id="pt" placeholder="Portugiesisch, z. B. obrigado" autocomplete="off" required>
+<input id="pt" placeholder="Portugiesisch, z. B. obrigado" lang="pt-PT" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="true" required>
+<a id="lk" class="lk" href="https://dicionario.priberam.org/" target="_blank" rel="noopener">Schreibweise bei Priberam prüfen</a>
 <input id="de" placeholder="Deutsch, z. B. danke" autocomplete="off" required>
 <button type="submit">Wort speichern</button>
 </form>
@@ -202,24 +209,51 @@ function grade(ok){
   current = null;
   renderLearn();
 }
+var editIdx = -1;
+function lookupUrl(pt){
+  var t = norm(pt).replace(/^(o|a|os|as) /, "");
+  return "https://dicionario.priberam.org/" + encodeURIComponent(t);
+}
 function renderList(){
   var ul = document.getElementById("list");
   if(!words.length){ul.innerHTML = '<li class="hint">Die Liste ist leer.</li>'; return;}
-  ul.innerHTML = words.map(function(w,i){
-    return '<li><div>' + esc(w.pt) + '<small>' + esc(w.de) + ' (Fach ' + (w.box + 1) + ')</small></div><button data-i="' + i + '" aria-label="' + esc(w.pt) + ' löschen">Löschen</button></li>';
+  ul.innerHTML = words.map(function(w, i){
+    if(i === editIdx){
+      return '<li><form class="edit"><input name="pt" value="' + esc(w.pt) + '" aria-label="Portugiesisch" lang="pt-PT" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="true" required><input name="de" value="' + esc(w.de) + '" aria-label="Deutsch" autocomplete="off" required><span class="acts"><button type="submit">Speichern</button><button type="button" class="cancel">Abbrechen</button></span></form></li>';
+    }
+    return '<li><div>' + esc(w.pt) + '<small>' + esc(w.de) + ' (Fach ' + (w.box + 1) + ')</small></div><span class="acts"><button type="button" data-a="edit" data-i="' + i + '">Ändern</button><a href="' + lookupUrl(w.pt) + '" target="_blank" rel="noopener">Nachschlagen</a><button type="button" class="del" data-a="del" data-i="' + i + '">Löschen</button></span></li>';
   }).join("");
-  Array.prototype.forEach.call(ul.querySelectorAll("button"), function(b){
+  Array.prototype.forEach.call(ul.querySelectorAll("button[data-a]"), function(b){
     b.onclick = function(){
-      words.splice(+b.dataset.i, 1);
-      save(); current = null; renderList();
+      var i = +b.dataset.i;
+      if(b.dataset.a === "edit"){
+        editIdx = i; renderList();
+        var f = ul.querySelector(".edit input");
+        if(f) f.focus();
+      }else{
+        words.splice(i, 1);
+        editIdx = -1; save(); current = null; tw = null; renderList();
+      }
     };
   });
+  var form = ul.querySelector("form.edit");
+  if(form){
+    form.onsubmit = function(e){
+      e.preventDefault();
+      var w = words[editIdx];
+      var pt = form.elements.pt.value.trim(), de = form.elements.de.value.trim();
+      if(!pt || !de) return;
+      w.pt = pt; w.de = de;
+      editIdx = -1; save(); renderList();
+    };
+    form.querySelector(".cancel").onclick = function(){editIdx = -1; renderList();};
+  }
 }
 document.getElementById("add").onsubmit = function(e){
   e.preventDefault();
   var pt = document.getElementById("pt"), de = document.getElementById("de");
   words.unshift({pt:pt.value.trim(), de:de.value.trim(), box:0, due:0});
-  save(); pt.value = ""; de.value = ""; pt.focus(); renderList();
+  save(); pt.value = ""; de.value = ""; document.getElementById("lk").href = lookupUrl(""); pt.focus(); renderList();
 };
 var tw = null, tstate = null, tvalue = "", tright = 0, ttotal = 0;
 function norm(s){return s.toLowerCase().replace(/\s+/g, " ").trim();}
@@ -276,7 +310,7 @@ function renderType(){
   }
 }
 function show(tab){
-  note = "";
+  note = ""; editIdx = -1;
   ["learn", "type", "words"].forEach(function(t){
     document.getElementById(t).classList.toggle("hidden", t !== tab);
     document.getElementById("t-" + t).setAttribute("aria-selected", t === tab);
@@ -285,6 +319,8 @@ function show(tab){
   else if(tab === "type"){renderType();}
   else{renderList();}
 }
+var ptIn = document.getElementById("pt"), lk = document.getElementById("lk");
+ptIn.addEventListener("input", function(){lk.href = lookupUrl(ptIn.value);});
 function bkMsg(t, ok){
   var m = document.getElementById("bk-msg");
   m.textContent = t;
